@@ -57,7 +57,7 @@ namespace IharBury.NHibernate
 
             public IFetch<T> FilterBy<TProperty>(Expression<Func<T, TProperty>> property, IEnumerable<TProperty> propertyValues)
             {
-                return new Fetch<T, TProperty>(session, propertyValues, FilterBy, getQueryParameterCountLimit);
+                return new Fetch<T, TProperty>(session, propertyValues.ToList(), FilterBy, getQueryParameterCountLimit);
 
                 IQueryable<T> FilterBy(IQueryable<T> query, IEnumerable<TProperty> propertyValueBatch)
                 {
@@ -100,7 +100,7 @@ namespace IharBury.NHibernate
         private sealed class Fetch<T, TProperty> : IFetch<T>
         {
             private readonly ISession session;
-            private readonly IEnumerable<TProperty> propertyValues;
+            private readonly IList<TProperty> propertyValues;
             private readonly Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy;
             private readonly GetQueryParameterCountLimit getQueryParameterCountLimit;
             private readonly IQueryable<T> queryWithoutFetching;
@@ -108,7 +108,7 @@ namespace IharBury.NHibernate
 
             public Fetch(
                 ISession session,
-                IEnumerable<TProperty> propertyValues,
+                IList<TProperty> propertyValues,
                 Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy,
                 GetQueryParameterCountLimit getQueryParameterCountLimit)
             {
