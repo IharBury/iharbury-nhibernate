@@ -2,12 +2,12 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>IharBury.NHibernate</id>
-        <version>1.0.1.0</version>
-        <authors>Ihar Bury</authors>
-        <owners>Ihar Bury</owners>
+        <version>$version$</version>
+        <authors>ihar.bury</authors>
+        <owners>ihar.bury</owners>
         <projectUrl>https://github.com/IharBury/iharbury-nhibernate</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>Extends NHibernate.</description>
+        <description>$description$</description>
         <tags>nhibernate</tags>
         <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     </metadata>
