@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace IharBury.NHibernate
 {
@@ -10,34 +9,38 @@ namespace IharBury.NHibernate
         /// </summary>
         internal static IEnumerable<IList<T>> InBatchesOf<T>(this IList<T> items, int batchSize)
         {
-            if (items.Count == 0)
-                return Enumerable.Empty<IList<T>>();
-
-            // Avoid creating too large collection when batch size is greater than the number of items.
-            if (batchSize >= items.Count)
-                return new[] { items };
-
-            return SplitToBatches();
-
-            IEnumerable<IList<T>> SplitToBatches()
+            var fullBatchCount = items.Count / batchSize;
+            var currentItemIndex = 0;
+            
+            for (var currentBatchIndex = 0; currentBatchIndex < fullBatchCount; currentBatchIndex++)
             {
-                var batch = new List<T>(batchSize);
+                var batch = new T[batchSize];
+                var currentItemInBatchIndex = 0;
 
-                foreach (var item in items)
+                while (currentItemInBatchIndex < batchSize)
                 {
-                    batch.Add(item);
-
-                    if (batch.Count >= batchSize)
-                    {
-                        yield return batch;
-                        batch = new List<T>(batchSize);
-                    }
+                    batch[currentItemInBatchIndex] = items[currentItemIndex];
+                    currentItemInBatchIndex++;
+                    currentItemIndex++;
                 }
 
-                if (batch.Count != 0)
+                yield return batch;
+            }
+
+            if (currentItemIndex < items.Count)
+            {
+                var lastBatchSize = items.Count - currentItemIndex;
+                var batch = new T[lastBatchSize];
+                var currentItemInBatchIndex = 0;
+
+                while (currentItemInBatchIndex < lastBatchSize)
                 {
-                    yield return batch;
+                    batch[currentItemInBatchIndex] = items[currentItemIndex];
+                    currentItemInBatchIndex++;
+                    currentItemIndex++;
                 }
+
+                yield return batch;
             }
         }
     }
