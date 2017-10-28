@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IharBury.NHibernate", "IharBury.NHibernate\IharBury.NHibernate.csproj", "{A01C55F8-3625-4F48-9D18-AE3EB2518F9E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IharBury.NHibernate.Tests", "IharBury.NHibernate.Tests\IharBury.NHibernate.Tests.csproj", "{5656B7F4-0519-43B4-B0C2-416E75AEEC80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A01C55F8-3625-4F48-9D18-AE3EB2518F9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A01C55F8-3625-4F48-9D18-AE3EB2518F9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A01C55F8-3625-4F48-9D18-AE3EB2518F9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5656B7F4-0519-43B4-B0C2-416E75AEEC80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5656B7F4-0519-43B4-B0C2-416E75AEEC80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5656B7F4-0519-43B4-B0C2-416E75AEEC80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5656B7F4-0519-43B4-B0C2-416E75AEEC80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
