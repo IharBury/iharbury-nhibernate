@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace IharBury.NHibernate
 {
@@ -9,8 +10,14 @@ namespace IharBury.NHibernate
         /// </summary>
         internal static IEnumerable<IList<T>> InBatchesOf<T>(this IList<T> items, int batchSize)
         {
+            if (items.Count == 0)
+                return Enumerable.Empty<IList<T>>();
+
             // Avoid creating too large collection when batch size is greater than the number of items.
-            return batchSize >= items.Count ? new[] { items } : SplitToBatches();
+            if (batchSize >= items.Count)
+                return new[] { items };
+
+            return SplitToBatches();
 
             IEnumerable<IList<T>> SplitToBatches()
             {
