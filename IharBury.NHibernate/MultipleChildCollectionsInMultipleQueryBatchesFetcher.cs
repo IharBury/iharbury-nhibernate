@@ -9,7 +9,8 @@ using NHibernate.Persister.Entity;
 namespace IharBury.NHibernate
 {
     /// <summary>
-    /// Contains <see cref="ISession"/> extension methods to fetches multiple child collections in a multiple database query batches.
+    /// Contains <see cref="ISession"/> extension methods to fetches multiple child collections
+    /// in a multiple database query batches.
     /// </summary>
     public static class MultipleChildCollectionsInMultipleQueryBatchesFetcher
     {
@@ -20,10 +21,14 @@ namespace IharBury.NHibernate
         /// which can return exponentially huge record count. 
         /// </summary>
         /// <param name="session">The NHibernate session.</param>
-        /// <param name="getQueryParameterCountLimit">A delegate that determines the maximum query parameter count supported by the database.</param>
+        /// <param name="getQueryParameterCountLimit">
+        /// A delegate that determines the maximum query parameter count supported by the database.
+        /// </param>
         /// <typeparam name="T">The type of the entity being loaded from the database.</typeparam>
         /// <returns>An interface that allows to filter, configure fetches and execute the query.</returns>
-        public static IFilter<T> FetchMultipleChildCollectionsInMultipleQueryBatches<T>(this ISession session, GetQueryParameterCountLimit getQueryParameterCountLimit)
+        public static IFilter<T> FetchMultipleChildCollectionsInMultipleQueryBatches<T>(
+            this ISession session,
+            GetQueryParameterCountLimit getQueryParameterCountLimit)
         {
             return new Filter<T>(session, getQueryParameterCountLimit);
         }
@@ -40,8 +45,8 @@ namespace IharBury.NHibernate
             /// <param name="property">The property expression.</param>
             /// <param name="propertyValues">The values of the filtered property.</param>
             /// <typeparam name="TProperty">The type of the property to filter by.</typeparam>
-            /// <returns>An interface that allows to configure fetches and execute the query.</returns>
-            IFetch<T> FilterBy<TProperty>(Expression<Func<T, TProperty>> property, IEnumerable<TProperty> propertyValues);
+            /// <returns>An interface that allows to do additional filtering, configure fetches and execute the query.</returns>
+            IWhere<T> FilterBy<TProperty>(Expression<Func<T, TProperty>> property, IEnumerable<TProperty> propertyValues);
         }
 
         private sealed class Filter<T> : IFilter<T>
@@ -55,9 +60,9 @@ namespace IharBury.NHibernate
                 this.getQueryParameterCountLimit = getQueryParameterCountLimit;
             }
 
-            public IFetch<T> FilterBy<TProperty>(Expression<Func<T, TProperty>> property, IEnumerable<TProperty> propertyValues)
+            public IWhere<T> FilterBy<TProperty>(Expression<Func<T, TProperty>> property, IEnumerable<TProperty> propertyValues)
             {
-                return new Fetch<T, TProperty>(session, propertyValues.ToList(), FilterBy, getQueryParameterCountLimit);
+                return new Where<T, TProperty>(session, propertyValues.ToList(), FilterBy, getQueryParameterCountLimit);
 
                 IQueryable<T> FilterBy(IQueryable<T> query, IEnumerable<TProperty> propertyValueBatch)
                 {
@@ -70,6 +75,112 @@ namespace IharBury.NHibernate
                     var filterExpression = Expression.Lambda<Func<T, bool>>(filterExpressionBody, item);
                     return query.Where(filterExpression);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Allows to filter, configure fetching of child entities and child collections, and to execute the query.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity being loaded from the database.</typeparam>
+        public interface IWhere<T> : IFetch<T>
+        {
+            /// <summary>
+            /// Filters the loaded collection of entities by a value of a property.
+            /// </summary>
+            /// <typeparam name="TProperty">The property type.</typeparam>
+            /// <param name="property">The property expression.</param>
+            /// <param name="value">The value of the filtered property.</param>
+            /// <returns>An interface that allows to do additional filtering, configure fetches and execute the query.</returns>
+            IWhere<T> WherePropertyEquals<TProperty>(Expression<Func<T, TProperty>> property, TProperty value);
+
+            /// <summary>
+            /// Filters the loaded collection of entities by a collection of values of a property.
+            /// The size of the collection must be small enough so that the resulting query parameter count
+            /// is supported by the database.
+            /// </summary>
+            /// <typeparam name="TProperty">The property type.</typeparam>
+            /// <param name="property">The property expression.</param>
+            /// <param name="values">The values of the filtered property.</param>
+            /// <returns>An interface that allows to do additional filtering, configure fetches and execute the query.</returns>
+            IWhere<T> WherePropertyIsIn<TProperty>(Expression<Func<T, TProperty>> property, ICollection<TProperty> values);
+        }
+
+        private sealed class Where<T, TProperty> : IWhere<T>
+        {
+            private readonly ISession session;
+            private readonly IList<TProperty> propertyValues;
+            private readonly Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy;
+            private readonly GetQueryParameterCountLimit getQueryParameterCountLimit;
+            private IQueryable<T> query;
+            private int additionalParameterCount;
+
+            public Where(
+                ISession session,
+                IList<TProperty> propertyValues,
+                Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy,
+                GetQueryParameterCountLimit getQueryParameterCountLimit)
+            {
+                this.session = session;
+                this.propertyValues = propertyValues;
+                this.filterBy = filterBy;
+                this.getQueryParameterCountLimit = getQueryParameterCountLimit;
+                query = session.Query<T>();
+            }
+
+            public IFetch<T> FetchMany<TChild>(
+                Expression<Func<T, IEnumerable<TChild>>> children,
+                Action<IDescendantFetch<T, TChild>> then = null)
+            {
+                return ToFetch().FetchMany(children, then);
+            }
+
+            public List<T> ToList() => ToFetch().ToList();
+
+            public IWhere<T> WherePropertyEquals<TAdditionalProperty>(
+                Expression<Func<T, TAdditionalProperty>> property,
+                TAdditionalProperty value)
+            {
+                checked
+                {
+                    additionalParameterCount += 1;
+                }
+
+                Expression<Func<TAdditionalProperty, bool>> templateExpression = propertyValue => Equals(propertyValue, value);
+                var item = Expression.Parameter(typeof(T), "item");
+                var propertyExpression = Expression.Invoke(property, item);
+                var filterExpressionBody = Expression.Invoke(templateExpression, propertyExpression);
+                var filterExpression = Expression.Lambda<Func<T, bool>>(filterExpressionBody, item);
+                query = query.Where(filterExpression);
+                return this;
+            }
+
+            public IWhere<T> WherePropertyIsIn<TAdditionalProperty>(
+                Expression<Func<T, TAdditionalProperty>> property,
+                ICollection<TAdditionalProperty> values)
+            {
+                checked
+                {
+                    additionalParameterCount += values.Count;
+                }
+
+                Expression<Func<TAdditionalProperty, bool>> templateExpression = propertyValue => values.Contains(propertyValue);
+                var item = Expression.Parameter(typeof(T), "item");
+                var propertyExpression = Expression.Invoke(property, item);
+                var filterExpressionBody = Expression.Invoke(templateExpression, propertyExpression);
+                var filterExpression = Expression.Lambda<Func<T, bool>>(filterExpressionBody, item);
+                query = query.Where(filterExpression);
+                return this;
+            }
+
+            private Fetch<T, TProperty> ToFetch()
+            {
+                return new Fetch<T, TProperty>(
+                    session,
+                    propertyValues,
+                    filterBy,
+                    getQueryParameterCountLimit,
+                    query,
+                    additionalParameterCount);
             }
         }
 
@@ -104,19 +215,23 @@ namespace IharBury.NHibernate
             private readonly Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy;
             private readonly GetQueryParameterCountLimit getQueryParameterCountLimit;
             private readonly IQueryable<T> queryWithoutFetching;
+            private readonly int additionalParameterCount;
             private readonly List<IQueryable<T>> fetches = new List<IQueryable<T>>();
 
             public Fetch(
                 ISession session,
                 IList<TProperty> propertyValues,
                 Func<IQueryable<T>, IEnumerable<TProperty>, IQueryable<T>> filterBy,
-                GetQueryParameterCountLimit getQueryParameterCountLimit)
+                GetQueryParameterCountLimit getQueryParameterCountLimit,
+                IQueryable<T> queryWithoutFetching,
+                int additionalParameterCount)
             {
                 this.session = session;
                 this.propertyValues = propertyValues;
                 this.filterBy = filterBy;
                 this.getQueryParameterCountLimit = getQueryParameterCountLimit;
-                queryWithoutFetching = session.Query<T>();
+                this.queryWithoutFetching = queryWithoutFetching;
+                this.additionalParameterCount = additionalParameterCount;
             }
 
             public IFetch<T> FetchMany<TChild>(
@@ -167,9 +282,12 @@ namespace IharBury.NHibernate
                 // implicit query parameters.
                 int entityHierarchySize = GetEntityPersister().EntityMetamodel.SubclassEntityNames.Count;
 
-                int batchSize = entityHierarchySize <= 1 
-                    ? queryParameterCountLimit
-                    : queryParameterCountLimit - entityHierarchySize;
+                int batchSize = queryParameterCountLimit - additionalParameterCount;
+
+                if (entityHierarchySize > 1)
+                {
+                    batchSize -= entityHierarchySize;
+                }
 
                 if (batchSize <= 0)
                 {
