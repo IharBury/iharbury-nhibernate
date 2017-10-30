@@ -40,16 +40,6 @@ namespace IharBury.NHibernate.Tests.EnumerableExtensions
         }
 
         [Fact]
-        public void BatchesDoNotHaveExcessiveCapacity()
-        {
-            var collection = Enumerable.Range(1, 5).ToList();
-            var batches = collection.InBatchesOf(2).ToList();
-
-            // Arrays have capacity equal to their size.
-            Assert.All(batches, batch => Assert.IsType<int[]>(batch));
-        }
-
-        [Fact]
         public void ValidatesThatCollectionIsNotNull()
         {
             IList<int> collection = null;

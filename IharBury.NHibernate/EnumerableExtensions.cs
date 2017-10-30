@@ -10,7 +10,7 @@ namespace IharBury.NHibernate
         /// </summary>
         /// <exception cref="ArgumentNullException">When <paramref name="items"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException">When <paramref name="batchSize"/> is not positive.</exception>
-        internal static IEnumerable<IList<T>> InBatchesOf<T>(this IList<T> items, int batchSize)
+        internal static IEnumerable<T[]> InBatchesOf<T>(this IList<T> items, int batchSize)
         {
             if (items == null)
                 throw new ArgumentNullException(nameof(items));
@@ -20,7 +20,7 @@ namespace IharBury.NHibernate
             // Arguments are validated before the iterator to throw before the enumeration.
             return SplitIntoBatches();
 
-            IEnumerable<IList<T>> SplitIntoBatches()
+            IEnumerable<T[]> SplitIntoBatches()
             {
                 var fullBatchCount = items.Count / batchSize;
                 var currentItemIndex = 0;
