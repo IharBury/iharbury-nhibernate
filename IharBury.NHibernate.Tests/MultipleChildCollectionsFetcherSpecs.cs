@@ -157,14 +157,16 @@ namespace IharBury.NHibernate.Tests
                     new A { X = 1 },
                     new A { Y = 1 },
                     new A { BCollection = { new B() { U = 1 } } },
-                    new A { X = 2 }
+                    new A { X = 2 },
+                    new A { X = 10 }
                 },
                 session =>
                 {
+                    session.EnableFilter("aFilter").SetParameter("filtered", 10);
                     var filteredX = new[] { 1 }.Concat(Enumerable.Range(3, 999));
                     var result = session.Query<A>()
-                        .FetchMany(a => a.BCollection).ThenFetchMany(b => b.DCollection)
-                        .FetchMany(a => a.CCollection).ThenFetchMany(c => c.ECollection)
+                        //.FetchMany(a => a.BCollection).ThenFetchMany(b => b.DCollection)
+                        //.FetchMany(a => a.CCollection).ThenFetchMany(c => c.ECollection)
                         .Where(a => !a.Z)
                         .Where(a => !a.BCollection.Any(b => b.U == 2017))
                         .Where(a => !new[] { -1, -2, -3, -4 }.Contains(a.X))
@@ -229,6 +231,7 @@ namespace IharBury.NHibernate.Tests
                 Map(a => a.Z);
                 HasMany(a => a.BCollection).AsSet().Cascade.All();
                 HasMany(a => a.CCollection).AsSet();
+                ApplyFilter<AFilter>();
             }
         }
 
@@ -287,6 +290,14 @@ namespace IharBury.NHibernate.Tests
             public EClassMap()
             {
                 Id(e => e.Id).GeneratedBy.Identity();
+            }
+        }
+
+        private class AFilter : FilterDefinition
+        {
+            public AFilter()
+            {
+                WithName("aFilter").WithCondition("X <> :filtered").AddParameter("filtered", NHibernateUtil.Int32);
             }
         }
     }
