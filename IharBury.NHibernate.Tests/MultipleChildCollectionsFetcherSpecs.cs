@@ -162,11 +162,14 @@ namespace IharBury.NHibernate.Tests
                 },
                 session =>
                 {
-                    session.EnableFilter("aFilter").SetParameter("filtered", 10);
+                    session.EnableFilter("aFilter")
+                        .SetParameter("f1", 10)
+                        .SetParameter("f2", 11)
+                        .SetParameter("f3", 12);
                     var filteredX = new[] { 1 }.Concat(Enumerable.Range(3, 999));
                     var result = session.Query<A>()
-                        //.FetchMany(a => a.BCollection).ThenFetchMany(b => b.DCollection)
-                        //.FetchMany(a => a.CCollection).ThenFetchMany(c => c.ECollection)
+                        .FetchMany(a => a.BCollection).ThenFetchMany(b => b.DCollection)
+                        .FetchMany(a => a.CCollection).ThenFetchMany(c => c.ECollection)
                         .Where(a => !a.Z)
                         .Where(a => !a.BCollection.Any(b => b.U == 2017))
                         .Where(a => !new[] { -1, -2, -3, -4 }.Contains(a.X))
@@ -297,7 +300,10 @@ namespace IharBury.NHibernate.Tests
         {
             public AFilter()
             {
-                WithName("aFilter").WithCondition("X <> :filtered").AddParameter("filtered", NHibernateUtil.Int32);
+                WithName("aFilter").WithCondition("(X <> :f1) and (X <> :f2) and (X <> :f3)")
+                    .AddParameter("f1", NHibernateUtil.Int32)
+                    .AddParameter("f2", NHibernateUtil.Int32)
+                    .AddParameter("f3", NHibernateUtil.Int32);
             }
         }
     }

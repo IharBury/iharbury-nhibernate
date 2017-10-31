@@ -361,6 +361,10 @@ namespace IharBury.NHibernate
                     }
                 }
 
+                foreach (var enabledFilter in session.GetSessionImplementation().EnabledFilters.Values)
+                {
+                }
+
                 return queryParameterCount;
             }
 
