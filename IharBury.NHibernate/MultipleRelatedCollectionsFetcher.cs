@@ -21,6 +21,10 @@ namespace IharBury.NHibernate
         /// <typeparam name="TEntity">The type of the entity being loaded from the database.</typeparam>
         /// <param name="query">The query which can fetch multiple related collections.</param>
         /// <returns>An interface that allows to configure batching and execute the query.</returns>
+        /// <remarks>
+        /// The query should not use eager loading configured in the mapping.
+        /// Such eager loading may be executed several times or it may not be executed at all.
+        /// </remarks>
         public static IAvoidingCartesianProducts<TEntity> AvoidingCartesianProducts<TEntity>(this IQueryable<TEntity> query)
         {
             return new AvoidingCartesianProductsImplementation<TEntity>(query ?? throw new ArgumentNullException(nameof(query)));
