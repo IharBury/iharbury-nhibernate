@@ -24,7 +24,7 @@ and each batch of the collection values should be executed in its own database q
 That is non-trivial to implement correctly and to cover with tests.
 So I decided to build a fluent interface that takes care of the complexity.
 
-##Usage scenarios
+## Usage scenarios
 
 1. When there is a fixed number of query parameters which is small enough
 so the query batch parameter limits are not exceeded even with multiple queries in a query batch
@@ -68,7 +68,7 @@ so the query batch parameter limits are not exceeded even with multiple queries 
   The `getMaxSqlQueryParameterCount` delegate is responsible for determining the maximum query parameter count
   allowed by the database being used.
 
-##Limitations
+## Limitations
 
 Only eager loading configured in the query itself via `Fetch` and `FetchMany` is supported.
 The class maps should not configure any eager loading.
