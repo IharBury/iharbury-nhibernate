@@ -66,7 +66,8 @@ so the query batch parameter limits are not exceeded even with multiple queries 
   Note: Since the query is split in batches, it cannot sort the resulting values in the database and cannot return duplicate entities.
   
   The `getMaxSqlQueryParameterCount` delegate is responsible for determining the maximum query parameter count
-  allowed by the database being used.
+  allowed by the database being used. If there is a singleton implementation of the delegate in your project,
+  you may want to provide your own `InBatches` extension method without the parameter.
 
 ## Limitations
 
